@@ -75,6 +75,12 @@ public class GraphBuilderParameters {
     public final boolean fetchElevationUS;
 
     /**
+     * Way Property settings
+     */
+    public final JsonNode wayPropertySet;
+    
+
+    /**
      * Set all parameters from the given Jackson JSON tree, applying defaults.
      * Supplying MissingNode.getInstance() will cause all the defaults to be applied.
      * This could be done automatically with the "reflective query scraper" but it's less type safe and less clear.
@@ -93,7 +99,7 @@ public class GraphBuilderParameters {
         areaVisibility = config.path("areaVisibility").asBoolean(false);
         matchBusRoutesToStreets = config.path("matchBusRoutesToStreets").asBoolean(false);
         fetchElevationUS = config.path("fetchElevationUS").asBoolean(false);
-
+        wayPropertySet = config.path("wayPropertySet");
     }
 
 }
