@@ -30,6 +30,7 @@ import org.opentripplanner.openstreetmap.model.OSMWithTags;
 public class OSMSpecifier {
 
     public List<P2<String>> kvpairs;
+    private String originalString;
 
     public OSMSpecifier() {
         kvpairs = new ArrayList<P2<String>>(); // TODO string-pairs with a proper OSM tag class
@@ -37,6 +38,7 @@ public class OSMSpecifier {
 
     public OSMSpecifier(String spec) {
         this();
+        originalString = spec;
         setKvpairs(spec);
     }
 
@@ -144,6 +146,10 @@ public class OSMSpecifier {
 
     public void addTag(String key, String value) {
         kvpairs.add(new P2<String>(key, value));
+    }
+
+    public String getOriginalString() {
+        return originalString;
     }
 
     public String toString() {

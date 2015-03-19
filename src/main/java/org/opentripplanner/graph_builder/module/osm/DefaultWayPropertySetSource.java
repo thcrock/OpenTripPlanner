@@ -579,13 +579,13 @@ public class DefaultWayPropertySetSource implements WayPropertySetSource {
     private void createNames(WayPropertySet propset, String spec, String patternKey) {
         String pattern = localize(patternKey);
         CreativeNamer namer = new CreativeNamer(pattern);
-        propset.addCreativeNamer(new OSMSpecifier(spec), namer);
+        propset.setCreativeNamer(new OSMSpecifier(spec), namer);
     }
 
     private void createNotes(WayPropertySet propset, String spec, String patternKey, NoteMatcher matcher) {
         String pattern = localize(patternKey);
         NoteProperties properties = new NoteProperties(pattern, matcher);
-        propset.addNote(new OSMSpecifier(spec), properties);
+        propset.setNote(new OSMSpecifier(spec), properties);
     }
 
     private void setProperties(WayPropertySet propset, String spec,
@@ -606,7 +606,7 @@ public class DefaultWayPropertySetSource implements WayPropertySetSource {
         WayProperties properties = new WayProperties();
         properties.setPermission(permission);
         properties.setSafetyFeatures(new P2<Double>(safety, safetyBack));
-        propset.addProperties(new OSMSpecifier(spec), properties, mixin);
+        propset.setProperties(new OSMSpecifier(spec), properties, mixin);
     }
 
     private void setCarSpeed(WayPropertySet propset, String spec, float speed) {

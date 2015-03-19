@@ -15,6 +15,7 @@ package org.opentripplanner.graph_builder.module.osm;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -42,20 +43,20 @@ import org.slf4j.LoggerFactory;
 public class WayPropertySet {
     private static Logger LOG = LoggerFactory.getLogger(WayPropertySet.class);
 
-    private List<WayPropertyPicker> wayProperties;
+    private Map<String, WayPropertyPicker> wayProperties;
 
     /** Assign names to ways that do not have them based on OSM tags. */
-    private List<CreativeNamerPicker> creativeNamers;
+    private Map<String, CreativeNamerPicker> creativeNamers;
 
-    private List<SlopeOverridePicker> slopeOverrides;
+    private Map<String, SlopeOverridePicker> slopeOverrides;
     
     /** Assign automobile speeds based on OSM tags. */
-    private List<SpeedPicker> speedPickers;
+    private Map<String, SpeedPicker> speedPickers;
     
     /** The automobile speed for street segments that do not match any SpeedPicker. */
     public Float defaultSpeed;
 
-    private List<NotePicker> notes;
+    private Map<String, NotePicker> notes;
     
     private Pattern maxSpeedPattern;
 
@@ -70,11 +71,11 @@ public class WayPropertySet {
         defaultProperties.setSafetyFeatures(new P2<Double>(1.0, 1.0));
         defaultProperties.setPermission(StreetTraversalPermission.ALL);
         defaultSpeed = 11.2f; // 11.2 m/s ~= 25 mph ~= 40 kph, standard speed limit in the US
-        wayProperties = new ArrayList<WayPropertyPicker>();
-        creativeNamers = new ArrayList<CreativeNamerPicker>();
-        slopeOverrides = new ArrayList<SlopeOverridePicker>();
-        speedPickers = new ArrayList<SpeedPicker>();
-        notes = new ArrayList<NotePicker>();
+        wayProperties = new LinkedHashMap<String, WayPropertyPicker>();
+        creativeNamers = new LinkedHashMap<String, CreativeNamerPicker>();
+        slopeOverrides = new LinkedHashMap<String, SlopeOverridePicker>();
+        speedPickers = new LinkedHashMap<String, SpeedPicker>();
+        notes = new LinkedHashMap<String, NotePicker>();
         // regex courtesy http://wiki.openstreetmap.org/wiki/Key:maxspeed
         // and edited
         maxSpeedPattern = Pattern.compile("^([0-9][\\.0-9]+?)(?:[ ]?(kmh|km/h|kmph|kph|mph|knots))?$");
@@ -101,7 +102,7 @@ public class WayPropertySet {
         int bestRightScore = 0;
         List<WayProperties> leftMixins = new ArrayList<WayProperties>();
         List<WayProperties> rightMixins = new ArrayList<WayProperties>();
-        for (WayPropertyPicker picker : wayProperties) {
+        for (WayPropertyPicker picker : wayProperties.values()) {
             OSMSpecifier specifier = picker.getSpecifier();
             WayProperties wayProperties = picker.getProperties();
             P2<Integer> score = specifier.matchScores(way);
@@ -180,7 +181,7 @@ public class WayPropertySet {
     public String getCreativeNameForWay(OSMWithTags way) {
         CreativeNamer bestNamer = null;
         int bestScore = 0;
-        for (CreativeNamerPicker picker : creativeNamers) {
+        for (CreativeNamerPicker picker : creativeNamers.values()) {
             OSMSpecifier specifier = picker.specifier;
             CreativeNamer namer = picker.namer;
             int score = specifier.matchScore(way);
@@ -243,7 +244,7 @@ public class WayPropertySet {
         
         // SpeedPickers are constructed in DefaultWayPropertySetSource with an OSM specifier
         // (e.g. highway=motorway) and a default speed for that segment.
-        for (SpeedPicker picker : speedPickers) {
+        for (SpeedPicker picker : speedPickers.values()) {
             OSMSpecifier specifier = picker.specifier;
             score = specifier.matchScore(way);
             if (score > bestScore) {
@@ -260,7 +261,7 @@ public class WayPropertySet {
 
     public Set<T2<Alert, NoteMatcher>> getNoteForWay(OSMWithTags way) {
         HashSet<T2<Alert, NoteMatcher>> out = new HashSet<>();
-        for (NotePicker picker : notes) {
+        for (NotePicker picker : notes.values()) {
             OSMSpecifier specifier = picker.specifier;
             NoteProperties noteProperties = picker.noteProperties;
             if (specifier.matchScore(way) > 0) {
@@ -276,7 +277,7 @@ public class WayPropertySet {
     public boolean getSlopeOverride(OSMWithTags way) {
         boolean result = false;
         int bestScore = 0;
-        for (SlopeOverridePicker picker : slopeOverrides) {
+        for (SlopeOverridePicker picker : slopeOverrides.values()) {
             OSMSpecifier specifier = picker.getSpecifier();
             int score = specifier.matchScore(way);
             if (score > bestScore) {
@@ -287,24 +288,24 @@ public class WayPropertySet {
         return result;
     }
 
-    public void addProperties(OSMSpecifier spec, WayProperties properties, boolean mixin) {
-        wayProperties.add(new WayPropertyPicker(spec, properties, mixin));
+    public void setProperties(OSMSpecifier spec, WayProperties properties, boolean mixin) {
+        wayProperties.put(spec.getOriginalString(), new WayPropertyPicker(spec, properties, mixin));
     }
 
-    public void addProperties(OSMSpecifier spec, WayProperties properties) {
-        wayProperties.add(new WayPropertyPicker(spec, properties, false));
+    public void setProperties(OSMSpecifier spec, WayProperties properties) {
+        wayProperties.put(spec.getOriginalString(), new WayPropertyPicker(spec, properties, false));
     }
 
-    public void addCreativeNamer(OSMSpecifier spec, CreativeNamer namer) {
-        creativeNamers.add(new CreativeNamerPicker(spec, namer));
+    public void setCreativeNamer(OSMSpecifier spec, CreativeNamer namer) {
+        creativeNamers.put(spec.getOriginalString(), new CreativeNamerPicker(spec, namer));
     }
 
-    public void addNote(OSMSpecifier osmSpecifier, NoteProperties properties) {
-        notes.add(new NotePicker(osmSpecifier, properties));
+    public void setNote(OSMSpecifier osmSpecifier, NoteProperties properties) {
+        notes.put(osmSpecifier.getOriginalString(), new NotePicker(osmSpecifier, properties));
     }
 
     public void setSlopeOverride(OSMSpecifier spec, boolean override) {
-        slopeOverrides.add(new SlopeOverridePicker(spec, override));
+        slopeOverrides.put(spec.getOriginalString(), new SlopeOverridePicker(spec, override));
     }
 
     public boolean equals(Object o) {
@@ -324,7 +325,7 @@ public class WayPropertySet {
     }
 
     public void addSpeedPicker(SpeedPicker picker) {
-        this.speedPickers.add(picker);
+        this.speedPickers.put(picker.specifier.getOriginalString(), picker);
     }
     
     public Float getMetersSecondFromSpeed(String speed) {

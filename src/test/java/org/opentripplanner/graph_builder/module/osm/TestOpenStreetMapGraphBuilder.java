@@ -166,37 +166,48 @@ public class TestOpenStreetMapGraphBuilder extends TestCase {
         assertEquals(wayPropertySet.getDataForWay(way), wayPropertySet.defaultProperties);
 
         // add two equal matches: lane only...
-        OSMSpecifier lane_only = new OSMSpecifier();
-        lane_only.addTag("cycleway", "lane");
+        OSMSpecifier lane_only = new OSMSpecifier("cycleway=lane");
 
         WayProperties lane_is_safer = new WayProperties();
         lane_is_safer.setSafetyFeatures(new P2<Double>(1.5, 1.5));
 
-        wayPropertySet.addProperties(lane_only, lane_is_safer);
+        wayPropertySet.setProperties(lane_only, lane_is_safer);
 
         // and footway only
-        OSMSpecifier footway_only = new OSMSpecifier();
-        footway_only.addTag("highway", "footway");
+        OSMSpecifier footway_only = new OSMSpecifier("highway=footway");
 
         WayProperties footways_allow_peds = new WayProperties();
         footways_allow_peds.setPermission(StreetTraversalPermission.PEDESTRIAN);
 
-        wayPropertySet.addProperties(footway_only, footways_allow_peds);
+        wayPropertySet.setProperties(footway_only, footways_allow_peds);
 
         WayProperties dataForWay = wayPropertySet.getDataForWay(way);
         // the first one is found
         assertEquals(dataForWay, lane_is_safer);
 
         // add a better match
-        OSMSpecifier lane_and_footway = new OSMSpecifier();
-        lane_and_footway.addTag("cycleway", "lane");
-        lane_and_footway.addTag("highway", "footway");
+        OSMSpecifier lane_and_footway = new OSMSpecifier("cycleway=lane;highway=footway");
 
         WayProperties safer_and_peds = new WayProperties();
         safer_and_peds.setSafetyFeatures(new P2<Double>(0.75, 0.75));
         safer_and_peds.setPermission(StreetTraversalPermission.PEDESTRIAN);
 
-        wayPropertySet.addProperties(lane_and_footway, safer_and_peds);
+        wayPropertySet.setProperties(lane_and_footway, safer_and_peds);
+        dataForWay = wayPropertySet.getDataForWay(way);
+        assertEquals(dataForWay, safer_and_peds);
+
+        // test a replacement
+        System.out.println("Testing replacement");
+        WayProperties more_dangerous = new WayProperties();
+        more_dangerous.setSafetyFeatures(new P2<Double>(1.0, 1.0));
+        more_dangerous.setPermission(StreetTraversalPermission.PEDESTRIAN);
+
+        wayPropertySet.setProperties(lane_and_footway, more_dangerous);
+        dataForWay = wayPropertySet.getDataForWay(way);
+        assertEquals(dataForWay, more_dangerous);
+
+        // and changing it back
+        wayPropertySet.setProperties(lane_and_footway, safer_and_peds);
         dataForWay = wayPropertySet.getDataForWay(way);
         assertEquals(dataForWay, safer_and_peds);
 
@@ -204,7 +215,7 @@ public class TestOpenStreetMapGraphBuilder extends TestCase {
         OSMSpecifier gravel = new OSMSpecifier("surface=gravel");
         WayProperties gravel_is_dangerous = new WayProperties();
         gravel_is_dangerous.setSafetyFeatures(new P2<Double>(2.0, 2.0));
-        wayPropertySet.addProperties(gravel, gravel_is_dangerous, true);
+        wayPropertySet.setProperties(gravel, gravel_is_dangerous, true);
 
         dataForWay = wayPropertySet.getDataForWay(way);
         assertEquals(dataForWay.getSafetyFeatures().first, 1.5);
@@ -219,7 +230,7 @@ public class TestOpenStreetMapGraphBuilder extends TestCase {
         WayProperties track_is_safest = new WayProperties();
         track_is_safest.setSafetyFeatures(new P2<Double>(0.25, 0.25));
 
-        wayPropertySet.addProperties(track_only, track_is_safest);
+        wayPropertySet.setProperties(track_only, track_is_safest);
         dataForWay = wayPropertySet.getDataForWay(way);
         assertEquals(0.25, dataForWay.getSafetyFeatures().first); // right (with traffic) comes
                                                                        // from track
@@ -231,10 +242,10 @@ public class TestOpenStreetMapGraphBuilder extends TestCase {
         way.addTag("RLIS:reviewed", "no");
         WayPropertySet propset = new WayPropertySet();
         CreativeNamer namer = new CreativeNamer("platform");
-        propset.addCreativeNamer(new OSMSpecifier(
+        propset.setCreativeNamer(new OSMSpecifier(
                 "railway=platform;highway=footway;footway=sidewalk"), namer);
         namer = new CreativeNamer("sidewalk");
-        propset.addCreativeNamer(new OSMSpecifier("highway=footway;footway=sidewalk"), namer);
+        propset.setCreativeNamer(new OSMSpecifier("highway=footway;footway=sidewalk"), namer);
         assertEquals("sidewalk", propset.getCreativeNameForWay(way));
     }
 

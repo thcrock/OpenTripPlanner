@@ -68,6 +68,7 @@ public class WayProperties implements Cloneable {
     }
 
     public boolean equals(Object o) {
+        System.out.println("in this equals");
         if (o instanceof WayProperties) {
             WayProperties other = (WayProperties) o;
             return safetyFeatures.equals(other.safetyFeatures) && permission == other.permission;
@@ -76,6 +77,8 @@ public class WayProperties implements Cloneable {
     }
 
     public int hashCode() {
+        System.out.println(safetyFeatures);
+        System.out.println(permission);
         return safetyFeatures.hashCode() + permission.hashCode();
     }
 }

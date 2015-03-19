@@ -77,7 +77,7 @@ public class GraphBuilderParameters {
     /**
      * Way Property settings
      */
-    public final JsonNode wayPropertySet;
+    public final JsonNode osmProperties;
     
 
     /**
@@ -99,7 +99,7 @@ public class GraphBuilderParameters {
         areaVisibility = config.path("areaVisibility").asBoolean(false);
         matchBusRoutesToStreets = config.path("matchBusRoutesToStreets").asBoolean(false);
         fetchElevationUS = config.path("fetchElevationUS").asBoolean(false);
-        wayPropertySet = config.path("wayPropertySet");
+        osmProperties = config.path("osmProperties");
     }
 
 }
